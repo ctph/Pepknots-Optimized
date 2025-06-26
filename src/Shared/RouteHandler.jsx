@@ -1,0 +1,1 @@
+// Detect mobile or desktop to switch version
