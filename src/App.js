@@ -1,24 +1,50 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import useIsMobile from './hooks/useIsMobile';
+
+/* Desktop pages  */
+import DesktopHomePage from './Desktop/DesktopHomePage';
+import DesktopSimilarityPage from './Desktop/DesktopSimilarityPage';
+import Desktop3dViewerPage from './Desktop/Desktop3dViewerPage';
+
+/* Mobile pages   */
+import MobileHomePage from './Mobile/MobileHomePage';
+import MobileSimilarityPage from './Mobile/MobileSimilarityPage';
+import Mobile3dPage from './Mobile/Mobile3dPage';
 
 function App() {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        {/* --- Home --------------------------------------------------- */}
+        <Route
+          path="/"
+          element={isMobile ? <MobileHomePage /> : <DesktopHomePage />}
+        />
+
+        {/* --- Similarity -------------------------------------------- */}
+        <Route
+          path="/similarity/:pdbId"
+          element={isMobile ? <MobileSimilarityPage /> : <DesktopSimilarityPage />}
+        />
+
+        {/* --- 3-D viewer ------------------------------------------- */}
+        <Route
+          path="/viewer/:pdbId"
+          element={isMobile ? <Mobile3dPage /> : <Desktop3dViewerPage />}
+        />
+
+        {/* --- Short or malformed URLs → home ----------------------- */}
+        <Route path="/similarity" element={<Navigate to="/" replace />} />
+        <Route path="/percent"    element={<Navigate to="/" replace />} />
+
+        {/* --- 404 catch-all ---------------------------------------- */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
