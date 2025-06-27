@@ -12,54 +12,72 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Pepknots Database</title>
-    <!-- Preload JSmol resources -->
-    <link rel="preload" href="https://code.jquery.com/jquery-3.6.0.min.js" as="script">
-    <link rel="preload" href="%PUBLIC_URL%/jsmol/JSmol.min.js" as="script">
+    
+    <!-- Preload JSmol resources with proper attributes -->
+    <link 
+      rel="preload" 
+      href="%PUBLIC_URL%/jsmol/JSmol.min.js" 
+      as="script"
+      crossorigin="anonymous"
+    >
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     
-    <!-- Load scripts at end of body -->
-  <script 
-    src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-    crossorigin="anonymous"
-  ></script>
-  <script src="%PUBLIC_URL%/jsmol/JSmol.min.js"></script>
-  <script>
-    // ─────────────────────────────────────────
-    // 1) Suppress any uncaught “bitmap.close” errors
-    // ─────────────────────────────────────────
-    window.addEventListener('error', function(evt) {
-      if (evt.message && evt.message.includes('bitmap.close')) {
+    <!-- Load scripts at end of body with proper attributes -->
+    <script 
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+      defer
+    ></script>
+    
+    <script 
+      src="%PUBLIC_URL%/jsmol/JSmol.min.js" 
+      crossorigin="anonymous"
+      defer
+    ></script>
+    
+    <script>
+      // Enhanced error handling with error type checking
+      window.addEventListener('error', function(evt) {
+        // 1) Suppress specific JSmol bitmap.close errors
+        if (evt.message && /bitmap\.close/.test(evt.message)) {
+          evt.preventDefault();
+          console.warn('JSmol: Suppressed bitmap.close error');
+          return;
+        }
+        
+        // 2) Log other errors without breaking the app
+        console.error(
+          'Error:', evt.message, 
+          'in', evt.filename, 
+          'at line', evt.lineno, 
+          'column', evt.colno
+        );
         evt.preventDefault();
-        console.warn('Suppressed bitmap.close runtime error');
-      }
-    });
+      });
 
-    // 2) Suppress any other uncaught errors on mobile
-    window.addEventListener('error', function(evt) {
-      evt.preventDefault();
-      console.warn('Suppressed an error:', evt.message, 'at', evt.filename + ':' + evt.lineno);
-      return false;
-    });
+      // Handle promise rejections
+      window.addEventListener('unhandledrejection', function(evt) {
+        console.error('Unhandled rejection:', evt.reason);
+        evt.preventDefault();
+      });
 
-    // 3) Suppress unhandled promise rejections
-    window.addEventListener('unhandledrejection', function(evt) {
-      evt.preventDefault();
-      console.warn('Suppressed unhandled rejection:', evt.reason);
-    });
-
-    // ─────────────────────────────────────────
-    // 4) Your existing JSmol init
-    // ─────────────────────────────────────────
-    window.addEventListener('load', function() {
-      if (window.Jmol) {
-        window.Jmol._isInitialized = true;
-      }
-    });
-  </script>
-
+      // JSmol initialization with ready state check
+      window.addEventListener('DOMContentLoaded', function() {
+        function initializeJSmol() {
+          if (window.Jmol && !window.Jmol._isInitialized) {
+            window.Jmol._isInitialized = true;
+            console.log('JSmol initialized successfully');
+          } else if (!window.Jmol) {
+            setTimeout(initializeJSmol, 100);
+          }
+        }
+        
+        initializeJSmol();
+      });
+    </script>
   </body>
 </html>

@@ -1,28 +1,33 @@
 // Table of available PDB at Home Page
 import React, { useState, useEffect } from 'react';
-import { Table, Tag } from 'antd';
+import { Table, Tag, Spin, Alert } from 'antd';
 import { Link } from 'react-router-dom';
 
 const PdbTable = () => {
   const [pdbs, setPdbs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch('/filtered_pdbs_list.json')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch PDB list');
+        return res.json();
+      })
       .then(data => {
-        const formatted = data.map(filename => {
-          const id = filename.replace('.pdb', '');
-          return {
-            id,
-            sequence: '-',          // Placeholder
-            cyclisation: '-',       // Placeholder
-            filepath: `/filtered_pdbs/${filename}`,
-          };
-        });
+        const formatted = data.map(filename => ({
+          id: filename.replace('.pdb', ''),
+          sequence: '-',
+          cyclisation: '-',
+          filepath: `/filtered_pdbs/${filename}`,
+        }));
         setPdbs(formatted);
-        setLoading(false);
-      });
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+        setError(err.message);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const columns = [
@@ -31,7 +36,7 @@ const PdbTable = () => {
       dataIndex: 'id',
       key: 'id',
       render: (id) => (
-        <Link to={`/similarity/${id.toUpperCase()}`}>
+        <Link to={`/viewer/${id.toUpperCase()}`}>
           <Tag color="blue">{id}</Tag>
         </Link>
       ),
@@ -41,7 +46,7 @@ const PdbTable = () => {
       key: 'actions',
       render: (_, record) => (
         <>
-          <Link to={`/similarity/${record.id.toUpperCase()}`} style={{ marginRight: 8 }}>
+          <Link to={`/viewer/${record.id.toUpperCase()}`} style={{ marginRight: 8 }}>
             View 3D
           </Link>
           <a href={record.filepath} download>
@@ -52,14 +57,17 @@ const PdbTable = () => {
     },
   ];
 
+  if (error) return <Alert message={error} type="error" showIcon />;
+
   return (
-    <Table
-      columns={columns}
-      dataSource={pdbs}
-      loading={loading}
-      rowKey="id"
-      pagination={{ pageSize: 10 }}
-    />
+    <Spin spinning={loading}>
+      <Table
+        columns={columns}
+        dataSource={pdbs}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+      />
+    </Spin>
   );
 };
 

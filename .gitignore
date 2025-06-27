@@ -43,3 +43,4 @@ coverage/
 
 # Optional: Mac/Linux system files
 *.swp
+node_modules
