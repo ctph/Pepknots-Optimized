@@ -1,102 +1,99 @@
-// Search available PDB at Home Page
-import React, { useState, useEffect, useRef } from 'react';
-import { Select, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import levenshtein from 'fast-levenshtein';
+import React, { useState, useEffect, useRef } from "react";
+import { Select, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import levenshtein from "fast-levenshtein";
 
-const SearchBar = () => {
-  const [value, setValue] = useState(null);
-  const [options, setOptions] = useState([]);
-  const [allPdbIds, setAllPdbIds] = useState([]);
+export default function SearchBar() {
+  const [value, setValue] = useState(null);   /* selected file */
+  const [options, setOptions] = useState([]); /* dropdown items */
+  const [allIds, setAllIds] = useState([]);   /* lower-case IDs */
   const navigate = useNavigate();
-  const lastSearchedTerm = useRef(null);
 
+  const triggeredTerm = useRef(null);         /* remembers last 4-char toast */
+
+  /* load pdb list once */
   useEffect(() => {
-    fetch('/filtered_pdbs_list.json')
-      .then(res => res.json())
-      .then(data => {
-        const pdbIds = data.map(filename => filename.replace('.pdb', '').toLowerCase());
-        setAllPdbIds(pdbIds);
-        
-        const opt = data.map(filename => ({
-          label: filename.replace('.pdb', ''),
-          value: filename
-        }));
-        setOptions(opt);
+    fetch("/filtered_pdbs_list.json")
+      .then(r => r.json())
+      .then(files => {
+        const ids = files.map(f => f.replace(".pdb", "").toLowerCase());
+        setAllIds(ids);
+        setOptions(
+          ids.map(id => ({ value: id + ".pdb", label: id.toUpperCase() }))
+        );
       });
   }, []);
 
-  const findNearestMatches = (searchTerm) => {
-    const distances = allPdbIds.map(pdbId => ({
-      pdbId,
-      distance: levenshtein.get(searchTerm.toLowerCase(), pdbId.toLowerCase())
-    }));
-
-    return distances
-      .sort((a, b) => a.distance - b.distance)
+  /* helper: get 5 nearest ids */
+  const nearest5 = term =>
+    allIds
+      .map(id => ({ id, d: levenshtein.get(term, id) }))
+      .sort((a, b) => a.d - b.d)
       .slice(0, 5)
-      .map(item => item.pdbId);
-  };
+      .map(x => x.id);
 
-  const handleSearch = (searchTerm) => {
-    if (!searchTerm || searchTerm.length < 4) return;
-    if (searchTerm === lastSearchedTerm.current) return;
+  /* show toast only when term.length === 4 */
+  const handleSearch = text => {
+    const term = text.trim().toLowerCase();
 
-    lastSearchedTerm.current = searchTerm;
-
-    const exactMatch = allPdbIds.find(pdbId => 
-      pdbId.toLowerCase() === searchTerm.toLowerCase()
-    );
-
-    if (!exactMatch) {
-      const nearestMatches = findNearestMatches(searchTerm);
-      const key = `search-suggestions-${Date.now()}`;
-      
-      message.info({
-        content: (
-          <div>
-            <p>No exact match found. Did you mean:</p>
-            <ul style={{ marginTop: 8, marginBottom: 0 }}>
-              {nearestMatches.map(match => (
-                <li key={match}>
-                  <a onClick={() => {
-                    message.destroy(key);
-                    navigate(`/similarity/${match}`);
-                  }}>
-                    {match.toUpperCase()}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ),
-        key,
-        duration: 5,
-      });
+    if (term.length !== 4) {
+      triggeredTerm.current = null;           // reset when length ≠ 4
+      return;
     }
+    if (term === triggeredTerm.current) return; // already suggested once
+
+    triggeredTerm.current = term;
+
+    if (allIds.includes(term)) return;         // exact match exists
+
+    const list = nearest5(term);
+    const key  = `suggest-${Date.now()}`;
+
+    message.info({
+      key,
+      duration: 6,
+      onClose: () => (triggeredTerm.current = null),
+      content: (
+        <>
+          <p style={{ marginBottom: 6 }}>No exact match. Did you mean:</p>
+          <ul style={{ paddingLeft: 16, margin: 0 }}>
+            {list.map(id => (
+              <li key={id}>
+                <a
+                  onClick={() => {
+                    message.destroy(key);
+                    navigate(`/similarity/${id}`);
+                  }}
+                >
+                  {id.toUpperCase()}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      ),
+    });
   };
 
-  const handleChange = (selectedFilename) => {
-    const pdbId = selectedFilename.replace('.pdb', '').toLowerCase();
-    setValue(selectedFilename);
-    navigate(`/similarity/${pdbId}`);
-    lastSearchedTerm.current = null; // Reset on selection
+  /* when user picks an exact filename */
+  const handleSelect = file => {
+    const id = file.replace(".pdb", "").toLowerCase();
+    setValue(file);
+    navigate(`/similarity/${id}`);
+    triggeredTerm.current = null;
   };
 
   return (
     <Select
       showSearch
       value={value}
-      placeholder="Search PDBs (min 4 chars, e.g. 1A1P)"
-      style={{ width: '100%' }}
+      placeholder="Search PDBs (type 4 chars, e.g. 1A1P)"
+      style={{ width: "100%" }}
       options={options}
-      onChange={handleChange}
-      onSearch={handleSearch}
-      filterOption={(input, option) =>
-        option?.label?.toUpperCase().includes(input.toUpperCase())
-      }
+      optionLabelProp="label"
+      filterOption={(input, opt) => opt.label.includes(input.toUpperCase())}
+      onSearch={handleSearch}   /* fires every keystroke */
+      onSelect={handleSelect}
     />
   );
-};
-
-export default SearchBar;
+}
