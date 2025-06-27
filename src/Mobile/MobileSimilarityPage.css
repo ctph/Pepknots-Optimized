@@ -1,0 +1,47 @@
+.percent-page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  background: #fafafa;
+}
+
+@media (max-width: 767px) {
+  .percent-page-container {
+    padding: 1rem;
+  }
+}
+
+.similarity-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.compact-row > td {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  font-size: 0.85rem;
+}
+
+.ant-table-cell {
+  word-break: break-word;
+}
+
+@media (max-width: 767px) {
+  /* Slight shadow and spacing for each list item card */
+  .ant-card-small {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Remove extra horizontal padding from the small cards */
+  .ant-card-small .ant-card-body {
+    padding: 12px;
+  }
+
+  /* Make Tag + text align nicely in the card header */
+  .ant-card-small .ant-card-head {
+    min-height: unset;
+    padding: 10px 12px;
+  }
+}

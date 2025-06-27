@@ -22,28 +22,40 @@ export default function ProteinViewer({ pdbId }) {
     }, [pdbId]);
 
 
-  const createViewer = pdbText => {
+    const createViewer = (pdbText) => {
     const tryInit = () => {
-      const box = boxRef.current;
-      if (!box) return;
+        const box = boxRef.current;
+        if (!box || !document.body.contains(box)) return;
 
-      if (box.clientWidth && box.clientHeight) {
-        viewerRef.current = $3Dmol.createViewer(box, { backgroundColor: "white" });
+        const width = box.clientWidth;
+        const height = box.clientHeight;
+
+        if (width > 10 && height > 10) {
+        viewerRef.current = window.$3Dmol.createViewer(box, {
+            backgroundColor: "white",
+        });
+
         viewerRef.current.addModel(pdbText, "pdb");
         viewerRef.current.setStyle({}, { cartoon: { color: "spectrum" } });
-        viewerRef.current.zoomTo(); viewerRef.current.render();
+        viewerRef.current.zoomTo();
+        viewerRef.current.render();
 
-        /* keep responsive */
         const ro = new ResizeObserver(() => {
-          viewerRef.current.resize(); viewerRef.current.render();
+            try {
+            viewerRef.current.resize();
+            viewerRef.current.render();
+            } catch (err) {
+            console.warn("Viewer resize/render error:", err);
+            }
         });
         ro.observe(box);
-      } else {
-        requestAnimationFrame(tryInit);   // wait one frame and retry
-      }
+        } else {
+        requestAnimationFrame(tryInit);
+        }
     };
+
     tryInit();
-  };
+    }
 
   useEffect(() => () => {
     if (viewerRef.current) viewerRef.current.clear();

@@ -1,0 +1,19 @@
+/* mobile container */
+.m-home-wrap {
+  padding: 0.75rem 1rem;
+}
+
+/* subtitle tweak */
+.m-subtitle {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+
+/* table region: allows small phones to scroll horizontally if needed */
+.m-table-wrapper {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+/* SearchBar already handles width 100% via its own CSS */

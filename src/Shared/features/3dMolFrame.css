@@ -1,5 +1,6 @@
 .mol-frame {
   position: relative;
-  width: 100%;        /* take the full row width unless maxWidth overrides */
+  width: 100%;      /* take the full row width unless maxWidth overrides */
+  height: 100vh;
   overflow: hidden;   /* keep the canvas clipped */
 }
