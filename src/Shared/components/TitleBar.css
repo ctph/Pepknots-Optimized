@@ -1,0 +1,31 @@
+/* clickable banner */
+.title-bar {
+  /* look & feel */
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  cursor: pointer;
+  user-select: none;
+  background: #f5f5f5;      /* subtle banner tone */
+  border-bottom: 1px solid #e0e0e0;
+
+  /* text-layout rules that were in .home-title */
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* hover highlight */
+.title-bar:hover {
+  background: #eaeaea;
+}
+
+/* mobile overrides (from .home-title media query) */
+@media (max-width: 600px) {
+  .title-bar {
+    text-align: center;
+    font-size: 1.5rem;   /* smaller on phones */
+    line-height: 1.2;
+  }
+}
